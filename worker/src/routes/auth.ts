@@ -15,6 +15,7 @@ auth.get('/google', (c) => {
   url.searchParams.set('response_type', 'code')
   url.searchParams.set('scope', 'openid email profile')
   url.searchParams.set('access_type', 'offline')
+  url.searchParams.set('prompt', 'select_account')
   return c.redirect(url.toString())
 })
 
@@ -48,7 +49,7 @@ auth.get('/callback', async (c) => {
 
   if (email !== c.env.OWNER_EMAIL) {
     return c.html(
-      '<h2>此帳號無管理權限</h2><a href="/admin/login">返回登入</a>',
+      `<h2>此帳號無管理權限</h2><a href="${c.env.FRONTEND_URL}/admin/login">返回登入</a>`,
       403
     )
   }
@@ -62,17 +63,17 @@ auth.get('/callback', async (c) => {
   return new Response(null, {
     status: 302,
     headers: {
-      Location: '/admin',
+      Location: `${c.env.FRONTEND_URL}/admin`,
       'Set-Cookie': sessionCookie(session),
     },
   })
 })
 
-auth.post('/logout', (_c) => {
+auth.post('/logout', (c) => {
   return new Response(null, {
     status: 302,
     headers: {
-      Location: '/admin/login',
+      Location: `${c.env.FRONTEND_URL}/admin/login`,
       'Set-Cookie': sessionCookie('', 0),
     },
   })

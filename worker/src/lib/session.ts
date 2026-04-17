@@ -40,7 +40,7 @@ export async function verifySession(
 
 export function sessionCookie(token: string, maxAge?: number): string {
   const age = maxAge !== undefined ? maxAge : SESSION_DURATION / 1000
-  return `session=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${age}`
+  return `session=${token}; HttpOnly; SameSite=None; Secure; Path=/; Max-Age=${age}`
 }
 
 export function getSessionToken(cookieHeader: string | null): string | null {

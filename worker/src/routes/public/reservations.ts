@@ -105,7 +105,7 @@ publicReservations.post('/', async (c) => {
       await pushMessage(
         c.env.LINE_CHANNEL_ACCESS_TOKEN,
         c.env.OWNER_LINE_USER_ID,
-        `新預約通知\n顧客：${body.name}（${body.phone}）\n時間：${dt}\n服務：${service.name}`
+        `新預約通知\n顧客：${body.name}（${body.phone}）\n時間：${dt}\n服務：${service.name}\n管理後台：${c.env.FRONTEND_URL}/admin`
       )
     }
   }

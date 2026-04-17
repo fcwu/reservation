@@ -16,7 +16,10 @@ type Variables = { session: SessionData }
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>()
 
-app.use('*', cors({ origin: '*', credentials: true }))
+app.use('*', cors({
+  origin: (origin) => origin?.endsWith('.pages.dev') || origin === 'http://localhost:5173' ? origin : '',
+  credentials: true,
+}))
 
 // Auth routes (public)
 app.route('/auth', authRoutes)

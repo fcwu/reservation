@@ -58,16 +58,22 @@ services.put('/:id', async (c) => {
 
 services.delete('/:id', async (c) => {
   const id = c.req.param('id')
-  const active = await c.env.DB.prepare(
-    `SELECT COUNT(*) as count FROM reservations
-     WHERE service_id = ? AND status IN ('pending','confirmed')`
+  const confirmed = await c.env.DB.prepare(
+    `SELECT COUNT(*) as count FROM reservations WHERE service_id = ? AND status = 'confirmed'`
   )
     .bind(id)
     .first<{ count: number }>()
 
-  if (active && active.count > 0) {
-    return c.json({ error: '此服務有未完成的預約，無法刪除' }, 409)
+  if (confirmed && confirmed.count > 0) {
+    return c.json({ error: '此服務有已確認的預約，無法刪除' }, 409)
   }
+
+  await c.env.DB.prepare(
+    `UPDATE reservations SET status = 'rejected', rejection_reason = '服務已刪除'
+     WHERE service_id = ? AND status = 'pending'`
+  )
+    .bind(id)
+    .run()
 
   await c.env.DB.prepare('DELETE FROM services WHERE id = ?').bind(id).run()
   return c.json({ success: true })

@@ -6,6 +6,7 @@ export default function AdminServices() {
   const [form, setForm] = useState({ name: '', duration_minutes: 60, price: 0 })
   const [editing, setEditing] = useState<Service | null>(null)
   const [error, setError] = useState('')
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
   const load = () => api.getServices().then(setServices).catch(console.error)
   useEffect(() => { load() }, [])
@@ -28,12 +29,13 @@ export default function AdminServices() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('確定刪除此服務？')) return
     try {
       await api.deleteService(id)
+      setConfirmDeleteId(null)
       load()
     } catch (err) {
-      alert((err as Error).message)
+      setConfirmDeleteId(null)
+      setError((err as Error).message)
     }
   }
 
@@ -139,18 +141,38 @@ export default function AdminServices() {
                   </button>
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <button
-                    onClick={() => startEdit(s)}
-                    className="text-indigo-600 hover:underline mr-3"
-                  >
-                    編輯
-                  </button>
-                  <button
-                    onClick={() => handleDelete(s.id)}
-                    className="text-red-500 hover:underline"
-                  >
-                    刪除
-                  </button>
+                  {confirmDeleteId === s.id ? (
+                    <span className="inline-flex gap-2 items-center">
+                      <span className="text-sm text-gray-600">確定刪除？</span>
+                      <button
+                        onClick={() => handleDelete(s.id)}
+                        className="text-red-600 font-medium hover:underline text-sm"
+                      >
+                        確認
+                      </button>
+                      <button
+                        onClick={() => setConfirmDeleteId(null)}
+                        className="text-gray-500 hover:underline text-sm"
+                      >
+                        取消
+                      </button>
+                    </span>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => startEdit(s)}
+                        className="text-indigo-600 hover:underline mr-3"
+                      >
+                        編輯
+                      </button>
+                      <button
+                        onClick={() => setConfirmDeleteId(s.id)}
+                        className="text-red-500 hover:underline"
+                      >
+                        刪除
+                      </button>
+                    </>
+                  )}
                 </td>
               </tr>
             ))}

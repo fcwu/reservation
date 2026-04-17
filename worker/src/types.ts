@@ -6,6 +6,7 @@ export interface Env {
   SESSION_SECRET: string
   OWNER_EMAIL: string
   OWNER_LINE_USER_ID: string
+  FRONTEND_URL: string
 }
 
 export interface SessionData {

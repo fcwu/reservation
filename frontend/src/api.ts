@@ -7,6 +7,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
   })
   if (!res.ok) {
+    if (res.status === 401 && window.location.pathname.startsWith('/admin') && !window.location.pathname.startsWith('/admin/login')) {
+      window.location.href = '/admin/login'
+      throw new Error('Unauthorized')
+    }
     const err = await res.json().catch(() => ({ error: res.statusText }))
     throw new Error((err as { error: string }).error ?? res.statusText)
   }

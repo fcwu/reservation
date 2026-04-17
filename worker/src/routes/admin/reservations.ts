@@ -86,7 +86,7 @@ reservations.post('/:id/confirm', async (c) => {
     await pushMessage(
       c.env.LINE_CHANNEL_ACCESS_TOKEN,
       reservation.line_user_id,
-      `您的預約已確認！\n時間：${dt}\n服務：${reservation.service_name}`
+      `您的預約已確認！\n時間：${dt}\n服務：${reservation.service_name}\n查看預約：${c.env.FRONTEND_URL}/my-bookings`
     )
   }
 
@@ -115,8 +115,8 @@ reservations.post('/:id/reject', async (c) => {
 
   if (reservation.line_user_id) {
     const msg = body?.reason
-      ? `很抱歉，您的預約未能成立。\n原因：${body.reason}`
-      : `很抱歉，您的預約未能成立，請聯繫業主了解詳情。`
+      ? `很抱歉，您的預約未能成立。\n原因：${body.reason}\n重新預約：${c.env.FRONTEND_URL}`
+      : `很抱歉，您的預約未能成立，請聯繫業主了解詳情。\n重新預約：${c.env.FRONTEND_URL}`
     await pushMessage(c.env.LINE_CHANNEL_ACCESS_TOKEN, reservation.line_user_id, msg)
   }
 
@@ -156,7 +156,7 @@ reservations.post('/:id/cancel', async (c) => {
     await pushMessage(
       c.env.LINE_CHANNEL_ACCESS_TOKEN,
       reservation.line_user_id,
-      `您的預約已被取消，如有疑問請聯繫業主。\n時間：${dt}`
+      `您的預約已被取消，如有疑問請聯繫業主。\n時間：${dt}\n重新預約：${c.env.FRONTEND_URL}`
     )
   }
 
