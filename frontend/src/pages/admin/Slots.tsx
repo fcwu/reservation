@@ -337,7 +337,7 @@ export default function AdminSlots() {
                       <label className="text-xs text-gray-400 mb-1 block">開始時間</label>
                       <input
                         type="time"
-                        step="3600"
+                        step="1800"
                         value={daySlotForm.start_time}
                         onChange={(e) =>
                           setDaySlotForm({ ...daySlotForm, start_time: e.target.value })
@@ -349,7 +349,7 @@ export default function AdminSlots() {
                       <label className="text-xs text-gray-400 mb-1 block">結束時間</label>
                       <input
                         type="time"
-                        step="3600"
+                        step="1800"
                         value={daySlotForm.end_time}
                         onChange={(e) =>
                           setDaySlotForm({ ...daySlotForm, end_time: e.target.value })
@@ -412,7 +412,7 @@ export default function AdminSlots() {
                 <label className="text-xs text-gray-500 mb-1 block">開始時間</label>
                 <input
                   type="time"
-                  step="3600"
+                  step="1800"
                   value={ruleForm.start_time}
                   onChange={(e) => setRuleForm({ ...ruleForm, start_time: e.target.value })}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
@@ -422,7 +422,7 @@ export default function AdminSlots() {
                 <label className="text-xs text-gray-500 mb-1 block">結束時間</label>
                 <input
                   type="time"
-                  step="3600"
+                  step="1800"
                   value={ruleForm.end_time}
                   onChange={(e) => setRuleForm({ ...ruleForm, end_time: e.target.value })}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
@@ -487,7 +487,7 @@ export default function AdminSlots() {
                         <div className="flex items-center gap-2">
                           <input
                             type="time"
-                            step="3600"
+                            step="1800"
                             value={editRuleForm.start_time}
                             onChange={(e) => setEditRuleForm({ ...editRuleForm, start_time: e.target.value })}
                             className="border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
@@ -495,7 +495,7 @@ export default function AdminSlots() {
                           <span className="text-gray-400">–</span>
                           <input
                             type="time"
-                            step="3600"
+                            step="1800"
                             value={editRuleForm.end_time}
                             onChange={(e) => setEditRuleForm({ ...editRuleForm, end_time: e.target.value })}
                             className="border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
@@ -586,7 +586,7 @@ export default function AdminSlots() {
                 <input
                   required
                   type="datetime-local"
-                  step="3600"
+                  step="1800"
                   value={slotForm.start_at}
                   onChange={(e) => setSlotForm({ ...slotForm, start_at: e.target.value })}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
@@ -597,7 +597,7 @@ export default function AdminSlots() {
                 <input
                   required
                   type="datetime-local"
-                  step="3600"
+                  step="1800"
                   value={slotForm.end_at}
                   onChange={(e) => setSlotForm({ ...slotForm, end_at: e.target.value })}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
