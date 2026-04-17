@@ -9,7 +9,7 @@ database_name = "reservation-db"
 database_id = "04d30345-6273-405d-a941-751f6230449e"
 
 [vars]
-OWNER_EMAIL = ""
+OWNER_EMAIL = "fcwu.tw@gmail.com"
 
 # Secrets (set via wrangler secret put):
 # GOOGLE_CLIENT_ID
