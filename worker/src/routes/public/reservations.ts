@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import type { Env } from '../../types'
 import { newId } from '../../lib/id'
 import { pushMessage } from '../../lib/line'
+import { addMinutes } from '../../lib/time'
 
 const publicReservations = new Hono<{ Bindings: Env }>()
 
@@ -20,44 +21,52 @@ publicReservations.post('/', async (c) => {
     return c.json({ error: 'slot_id, service_id, name, phone are required' }, 400)
   }
 
-  // Check slot availability
-  const slot = await c.env.DB.prepare('SELECT * FROM slots WHERE id = ?')
+  const rBody = body as typeof body & { start_at?: string; source_rule_id?: string }
+
+  // Resolve start_at: from existing slot or from body
+  const existingSlot = await c.env.DB.prepare('SELECT * FROM slots WHERE id = ?')
     .bind(body.slot_id)
     .first<{ id: string; start_at: string; is_available: number }>()
 
-  // For recurring slots that don't exist yet in the table, we allow booking by creating the slot
-  let slotId = body.slot_id
-  if (!slot) {
-    // slot_id from recurring expansion — need to create it
-    // The frontend sends start_at/end_at for recurring slots
-    const rBody = body as typeof body & { start_at?: string; end_at?: string; source_rule_id?: string }
-    if (!rBody.start_at || !rBody.end_at) {
-      return c.json({ error: 'Slot not found' }, 404)
-    }
-    const existing = await c.env.DB.prepare('SELECT id FROM slots WHERE start_at = ?')
-      .bind(rBody.start_at)
-      .first<{ id: string }>()
-    if (existing) {
-      slotId = existing.id
-    } else {
-      slotId = newId()
-      await c.env.DB.prepare(
-        'INSERT INTO slots (id, start_at, end_at, source_rule_id) VALUES (?, ?, ?, ?)'
-      )
-        .bind(slotId, rBody.start_at, rBody.end_at, rBody.source_rule_id ?? null)
-        .run()
-    }
-  } else if (!slot.is_available) {
-    return c.json({ error: '此時段已被預約' }, 409)
+  let startAt: string
+  if (existingSlot) {
+    if (!existingSlot.is_available) return c.json({ error: '此時段已被預約' }, 409)
+    startAt = existingSlot.start_at
+  } else if (rBody.start_at) {
+    startAt = rBody.start_at
+  } else {
+    return c.json({ error: 'Slot not found' }, 404)
   }
 
-  // Check no confirmed reservation exists for this slot
-  const taken = await c.env.DB.prepare(
-    `SELECT id FROM reservations WHERE slot_id = ? AND status = 'confirmed'`
+  // Every booking is exactly 2 hours
+  const endAt = addMinutes(startAt, 120)
+
+  // Check no confirmed reservation overlaps with [startAt, endAt)
+  const overlap = await c.env.DB.prepare(
+    `SELECT r.id FROM reservations r
+     JOIN slots sl ON sl.id = r.slot_id
+     WHERE r.status = 'confirmed'
+       AND sl.start_at < ? AND sl.end_at > ?`
   )
-    .bind(slotId)
+    .bind(endAt, startAt)
     .first()
-  if (taken) return c.json({ error: '此時段已被預約' }, 409)
+  if (overlap) return c.json({ error: '此時段已被預約' }, 409)
+
+  // Find or create the 2-hour booking slot
+  let slotId: string
+  const existingByStart = await c.env.DB.prepare('SELECT id FROM slots WHERE start_at = ?')
+    .bind(startAt)
+    .first<{ id: string }>()
+  if (existingByStart) {
+    slotId = existingByStart.id
+  } else {
+    slotId = newId()
+    await c.env.DB.prepare(
+      'INSERT INTO slots (id, start_at, end_at, source_rule_id) VALUES (?, ?, ?, ?)'
+    )
+      .bind(slotId, startAt, endAt, rBody.source_rule_id ?? null)
+      .run()
+  }
 
   // Upsert customer by phone
   let customer = await c.env.DB.prepare('SELECT * FROM customers WHERE phone = ?')

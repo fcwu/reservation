@@ -14,6 +14,27 @@ declare global {
 
 const LIFF_ID = import.meta.env.VITE_LIFF_ID ?? ''
 const WEEK_LABELS = ['日', '一', '二', '三', '四', '五', '六']
+const THIRTY_MIN_MS = 30 * 60 * 1000
+
+function addTwoHours(start_at: string): string {
+  const m = start_at.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})/)
+  if (!m) return start_at
+  const [, date, h, min] = m
+  const total = parseInt(h) * 60 + parseInt(min) + 120
+  return `${date}T${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}:00`
+}
+
+function getAvailableWindows(slots: Slot[]): Slot[] {
+  const times = new Set(slots.map((s) => new Date(s.start_at).getTime()))
+  return slots.filter((s) => {
+    const t = new Date(s.start_at).getTime()
+    return (
+      times.has(t + THIRTY_MIN_MS) &&
+      times.has(t + 2 * THIRTY_MIN_MS) &&
+      times.has(t + 3 * THIRTY_MIN_MS)
+    )
+  })
+}
 
 function MonthCalendar({
   year,
@@ -255,29 +276,29 @@ export default function BookingPage() {
                   })}{' '}
                   可選時段
                 </h2>
-                <div className="space-y-2">
-                  {daySlotsForSelected.map((slot) => (
-                    <button
-                      key={slot.id}
-                      onClick={() => setSelected(slot)}
-                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-left hover:border-indigo-400 hover:shadow-sm transition"
-                    >
-                      <span className="font-medium text-gray-800">
-                        {new Date(slot.start_at).toLocaleTimeString('zh-TW', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </span>
-                      <span className="text-gray-400 mx-2">–</span>
-                      <span className="text-sm text-gray-500">
-                        {new Date(slot.end_at).toLocaleTimeString('zh-TW', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </span>
-                    </button>
-                  ))}
-                </div>
+                {getAvailableWindows(daySlotsForSelected).length === 0 ? (
+                  <p className="text-sm text-gray-400">今日無完整兩小時可預約時段</p>
+                ) : (
+                  <div className="space-y-2">
+                    {getAvailableWindows(daySlotsForSelected).map((slot) => {
+                      const endAt = addTwoHours(slot.start_at)
+                      const fmt = (s: string) =>
+                        new Date(s).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })
+                      return (
+                        <button
+                          key={slot.id}
+                          onClick={() => setSelected({ ...slot, end_at: endAt })}
+                          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-left hover:border-indigo-400 hover:shadow-sm transition"
+                        >
+                          <span className="font-medium text-gray-800">{fmt(slot.start_at)}</span>
+                          <span className="text-gray-400 mx-2">–</span>
+                          <span className="text-sm text-gray-500">{fmt(endAt)}</span>
+                          <span className="text-xs text-gray-400 ml-2">（2 小時）</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
             )}
 

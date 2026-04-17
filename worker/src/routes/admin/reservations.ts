@@ -1,6 +1,8 @@
 import { Hono } from 'hono'
 import type { Env } from '../../types'
 import { pushMessage } from '../../lib/line'
+import { addMinutes, halfHourTimesInRange } from '../../lib/time'
+import { newId } from '../../lib/id'
 
 const reservations = new Hono<{ Bindings: Env }>()
 
@@ -71,9 +73,26 @@ reservations.post('/:id/confirm', async (c) => {
   await c.env.DB.prepare(`UPDATE reservations SET status = 'confirmed' WHERE id = ?`)
     .bind(id)
     .run()
+
+  // Mark the booking slot and all overlapping 30-min slots as unavailable
+  const endAt = addMinutes(reservation.start_at, 120)
   await c.env.DB.prepare(`UPDATE slots SET is_available = 0 WHERE id = ?`)
     .bind(reservation.slot_id)
     .run()
+  for (const t of halfHourTimesInRange(reservation.start_at, endAt)) {
+    const existing = await c.env.DB.prepare('SELECT id FROM slots WHERE start_at = ?')
+      .bind(t)
+      .first<{ id: string }>()
+    if (existing) {
+      await c.env.DB.prepare('UPDATE slots SET is_available = 0 WHERE id = ?')
+        .bind(existing.id)
+        .run()
+    } else {
+      await c.env.DB.prepare('INSERT INTO slots (id, start_at, end_at, is_available) VALUES (?, ?, ?, 0)')
+        .bind(newId(), t, addMinutes(t, 30), 0)
+        .run()
+    }
+  }
 
   if (reservation.line_user_id) {
     const dt = new Date(reservation.start_at).toLocaleString('zh-TW', {
@@ -141,8 +160,17 @@ reservations.post('/:id/cancel', async (c) => {
   await c.env.DB.prepare(`UPDATE reservations SET status = 'cancelled' WHERE id = ?`)
     .bind(id)
     .run()
+
+  // Restore the booking slot and all 30-min slots in the 2-hour window
+  const endAt = addMinutes(reservation.start_at, 120)
   await c.env.DB.prepare(`UPDATE slots SET is_available = 1 WHERE id = ?`)
     .bind(reservation.slot_id)
+    .run()
+  await c.env.DB.prepare(
+    `UPDATE slots SET is_available = 1
+     WHERE start_at >= ? AND start_at < ?`
+  )
+    .bind(reservation.start_at, endAt)
     .run()
 
   if (reservation.line_user_id) {
