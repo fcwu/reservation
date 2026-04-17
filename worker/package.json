@@ -1,0 +1,21 @@
+{
+  "name": "reservation-worker",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "wrangler dev",
+    "build": "wrangler deploy --dry-run",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "db:migrate:local": "wrangler d1 migrations apply reservation-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply reservation-db"
+  },
+  "dependencies": {
+    "hono": "^4.6.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241022.0",
+    "typescript": "^5.5.2",
+    "wrangler": "^3.78.12"
+  }
+}
