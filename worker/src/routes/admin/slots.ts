@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import type { Env } from '../../types'
 import { newId } from '../../lib/id'
 import { expandRules } from '../../lib/slots'
+import { addMinutes, halfHourTimesInRange } from '../../lib/time'
 
 const slots = new Hono<{ Bindings: Env }>()
 
@@ -44,30 +45,34 @@ slots.get('/', async (c) => {
   })
 })
 
-// POST /api/admin/slots — create one-time slot
+// POST /api/admin/slots — create 30-min slots covering [start_at, end_at)
 slots.post('/', async (c) => {
   const body = await c.req.json<{ start_at: string; end_at: string }>()
   if (!body.start_at || !body.end_at) {
     return c.json({ error: 'start_at and end_at are required' }, 400)
   }
 
-  // Check overlap
-  const overlap = await c.env.DB.prepare(
-    `SELECT id FROM slots WHERE NOT (end_at <= ? OR start_at >= ?)`
-  )
-    .bind(body.start_at, body.end_at)
-    .first()
-  if (overlap) return c.json({ error: '與現有時段時間重疊' }, 409)
+  const times = halfHourTimesInRange(body.start_at, body.end_at)
+  if (times.length === 0) {
+    return c.json({ error: '時段範圍無效或小於 30 分鐘' }, 400)
+  }
 
-  const id = newId()
-  await c.env.DB.prepare('INSERT INTO slots (id, start_at, end_at) VALUES (?, ?, ?)')
-    .bind(id, body.start_at, body.end_at)
-    .run()
+  const created: { id: string; start_at: string; end_at: string }[] = []
+  for (const t of times) {
+    const tEnd = addMinutes(t, 30)
+    const existing = await c.env.DB.prepare(
+      `SELECT id FROM slots WHERE start_at = ?`
+    ).bind(t).first()
+    if (!existing) {
+      const id = newId()
+      await c.env.DB.prepare('INSERT INTO slots (id, start_at, end_at) VALUES (?, ?, ?)')
+        .bind(id, t, tEnd)
+        .run()
+      created.push({ id, start_at: t, end_at: tEnd })
+    }
+  }
 
-  return c.json(
-    await c.env.DB.prepare('SELECT * FROM slots WHERE id = ?').bind(id).first(),
-    201
-  )
+  return c.json(created, 201)
 })
 
 // DELETE /api/admin/slots/:id

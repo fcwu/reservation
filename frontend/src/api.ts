@@ -62,7 +62,7 @@ export const api = {
   // Admin — Slots
   getAdminSlots: () => request<AdminSlotsResponse>('/api/admin/slots'),
   createSlot: (data: { start_at: string; end_at: string }) =>
-    request<Slot>('/api/admin/slots', { method: 'POST', body: JSON.stringify(data) }),
+    request<Slot[]>('/api/admin/slots', { method: 'POST', body: JSON.stringify(data) }),
   deleteSlot: (id: string) => request(`/api/admin/slots/${id}`, { method: 'DELETE' }),
   createSlotRule: (data: { day_of_week: number; start_time: string; end_time: string }) =>
     request('/api/admin/slots/rules', { method: 'POST', body: JSON.stringify(data) }),
