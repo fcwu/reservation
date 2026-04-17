@@ -33,17 +33,22 @@ export function expandRules(
         const dateStr = candidate.toISOString().slice(0, 10) // YYYY-MM-DD
         if (overrideDates.has(dateStr)) continue
 
-        const start_at = `${dateStr}T${rule.start_time}:00`
-        const end_at = `${dateStr}T${rule.end_time}:00`
+        const startHour = parseInt(rule.start_time.split(':')[0])
+        const endHour = parseInt(rule.end_time.split(':')[0])
 
-        if (existingSlotDates.has(start_at)) continue
+        for (let hour = startHour; hour < endHour; hour++) {
+          const start_at = `${dateStr}T${String(hour).padStart(2, '0')}:00:00`
+          const end_at = `${dateStr}T${String(hour + 1).padStart(2, '0')}:00:00`
 
-        result.push({
-          id: crypto.randomUUID(),
-          start_at,
-          end_at,
-          source_rule_id: rule.id,
-        })
+          if (existingSlotDates.has(start_at)) continue
+
+          result.push({
+            id: crypto.randomUUID(),
+            start_at,
+            end_at,
+            source_rule_id: rule.id,
+          })
+        }
       }
     }
   }
