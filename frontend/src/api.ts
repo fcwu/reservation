@@ -84,6 +84,11 @@ export const api = {
     }),
   cancelReservation: (id: string) =>
     request(`/api/admin/reservations/${id}/cancel`, { method: 'POST' }),
+  sendReservationMessage: (id: string, message: string) =>
+    request(`/api/admin/reservations/${id}/message`, {
+      method: 'POST',
+      body: JSON.stringify({ message }),
+    }),
 }
 
 // ── Types ────────────────────────────────────────────────────────────────────

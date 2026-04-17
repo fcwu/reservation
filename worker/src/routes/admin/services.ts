@@ -68,9 +68,17 @@ services.delete('/:id', async (c) => {
     return c.json({ error: '此服務有已確認的預約，無法刪除' }, 409)
   }
 
+  // Reject pending reservations, then delete all non-confirmed reservations
+  // (D1 enforces foreign keys so all referencing rows must be removed first)
   await c.env.DB.prepare(
     `UPDATE reservations SET status = 'rejected', rejection_reason = '服務已刪除'
      WHERE service_id = ? AND status = 'pending'`
+  )
+    .bind(id)
+    .run()
+
+  await c.env.DB.prepare(
+    `DELETE FROM reservations WHERE service_id = ? AND status IN ('rejected', 'cancelled')`
   )
     .bind(id)
     .run()

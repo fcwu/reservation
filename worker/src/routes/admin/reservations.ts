@@ -163,4 +163,25 @@ reservations.post('/:id/cancel', async (c) => {
   return c.json({ success: true })
 })
 
+reservations.post('/:id/message', async (c) => {
+  const id = c.req.param('id')
+  const body = await c.req.json<{ message: string }>().catch(() => ({ message: '' }))
+  if (!body.message?.trim()) {
+    return c.json({ error: '訊息內容不能為空' }, 400)
+  }
+
+  const reservation = await c.env.DB.prepare(
+    `SELECT c.line_user_id FROM reservations r
+     JOIN customers c ON c.id = r.customer_id WHERE r.id = ?`
+  )
+    .bind(id)
+    .first<{ line_user_id: string | null }>()
+
+  if (!reservation) return c.json({ error: 'Not found' }, 404)
+  if (!reservation.line_user_id) return c.json({ error: '此顧客未綁定 LINE' }, 400)
+
+  await pushMessage(c.env.LINE_CHANNEL_ACCESS_TOKEN, reservation.line_user_id, body.message.trim())
+  return c.json({ success: true })
+})
+
 export default reservations

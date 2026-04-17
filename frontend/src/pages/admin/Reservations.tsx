@@ -20,6 +20,9 @@ export default function AdminReservations() {
   const [statusFilter, setStatusFilter] = useState('')
   const [rejectModal, setRejectModal] = useState<{ id: string } | null>(null)
   const [rejectReason, setRejectReason] = useState('')
+  const [messageModal, setMessageModal] = useState<{ id: string; name: string } | null>(null)
+  const [messageText, setMessageText] = useState('')
+  const [messageSending, setMessageSending] = useState(false)
 
   const load = () =>
     api.getAdminReservations(statusFilter ? { status: statusFilter } : {}).then(setReservations)
@@ -54,6 +57,20 @@ export default function AdminReservations() {
       load()
     } catch (err) {
       alert((err as Error).message)
+    }
+  }
+
+  const handleSendMessage = async () => {
+    if (!messageModal || !messageText.trim()) return
+    setMessageSending(true)
+    try {
+      await api.sendReservationMessage(messageModal.id, messageText)
+      setMessageModal(null)
+      setMessageText('')
+    } catch (err) {
+      alert((err as Error).message)
+    } finally {
+      setMessageSending(false)
     }
   }
 
@@ -105,6 +122,15 @@ export default function AdminReservations() {
                 <span className={`text-xs px-2 py-1 rounded-full font-medium ${STATUS_COLOR[r.status]}`}>
                   {STATUS_LABEL[r.status]}
                 </span>
+                {r.line_user_id && (
+                  <button
+                    type="button"
+                    onClick={() => { setMessageModal({ id: r.id, name: r.customer_name }); setMessageText('') }}
+                    className="border border-green-400 text-green-700 text-xs px-3 py-1.5 rounded-lg hover:bg-green-50"
+                  >
+                    傳訊息
+                  </button>
+                )}
                 {r.status === 'pending' && (
                   <>
                     <button
@@ -137,6 +163,39 @@ export default function AdminReservations() {
           <div className="text-center py-12 text-gray-400">尚無預約</div>
         )}
       </div>
+
+      {messageModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
+            <h3 className="font-semibold text-gray-800 mb-1">傳送 LINE 訊息</h3>
+            <p className="text-sm text-gray-500 mb-4">收件人：{messageModal.name}</p>
+            <textarea
+              value={messageText}
+              onChange={(e) => setMessageText(e.target.value)}
+              placeholder="請輸入訊息內容..."
+              rows={4}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-200 mb-4"
+            />
+            <div className="flex gap-2 justify-end">
+              <button
+                type="button"
+                onClick={() => setMessageModal(null)}
+                className="border border-gray-300 text-gray-600 px-4 py-2 rounded-lg text-sm"
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                onClick={handleSendMessage}
+                disabled={messageSending || !messageText.trim()}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700 disabled:opacity-50"
+              >
+                {messageSending ? '傳送中...' : '傳送'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {rejectModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
