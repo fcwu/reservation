@@ -6,6 +6,7 @@ export default function AdminServices() {
   const [form, setForm] = useState({ name: '', duration_minutes: 60, price: 0 })
   const [editing, setEditing] = useState<Service | null>(null)
   const [error, setError] = useState('')
+  const [deleteError, setDeleteError] = useState('')
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
   const load = () => api.getServices().then(setServices).catch(console.error)
@@ -32,10 +33,11 @@ export default function AdminServices() {
     try {
       await api.deleteService(id)
       setConfirmDeleteId(null)
+      setServices(prev => prev.filter(s => s.id !== id))
       load()
     } catch (err) {
       setConfirmDeleteId(null)
-      setError((err as Error).message)
+      setDeleteError((err as Error).message)
     }
   }
 
@@ -111,6 +113,11 @@ export default function AdminServices() {
         </div>
       </form>
 
+      {deleteError && (
+        <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+          {deleteError}
+        </div>
+      )}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b border-gray-200">
