@@ -4,6 +4,40 @@ import { api, type AdminSlotsResponse, type Slot, type SlotRule } from '../../ap
 const DAYS = ['日', '一', '二', '三', '四', '五', '六']
 const WEEK_LABELS = ['日', '一', '二', '三', '四', '五', '六']
 
+function TimeSelect({
+  value,
+  onChange,
+  className,
+}: {
+  value: string
+  onChange: (v: string) => void
+  className?: string
+}) {
+  const [h, m] = value.split(':')
+  return (
+    <div className={`flex items-center gap-1 ${className ?? ''}`}>
+      <select
+        value={h}
+        onChange={(e) => onChange(`${e.target.value}:${m}`)}
+        className="border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+      >
+        {Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0')).map((hh) => (
+          <option key={hh} value={hh}>{hh}</option>
+        ))}
+      </select>
+      <span className="text-gray-500 text-sm">:</span>
+      <select
+        value={m}
+        onChange={(e) => onChange(`${h}:${e.target.value}`)}
+        className="border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+      >
+        <option value="00">00</option>
+        <option value="30">30</option>
+      </select>
+    </div>
+  )
+}
+
 function getDateCoverage(
   date: Date,
   rules: SlotRule[],
@@ -335,26 +369,16 @@ export default function AdminSlots() {
                   <div className="grid grid-cols-2 gap-3 mb-3">
                     <div>
                       <label className="text-xs text-gray-400 mb-1 block">開始時間</label>
-                      <input
-                        type="time"
-                        step="1800"
+                      <TimeSelect
                         value={daySlotForm.start_time}
-                        onChange={(e) =>
-                          setDaySlotForm({ ...daySlotForm, start_time: e.target.value })
-                        }
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                        onChange={(v) => setDaySlotForm({ ...daySlotForm, start_time: v })}
                       />
                     </div>
                     <div>
                       <label className="text-xs text-gray-400 mb-1 block">結束時間</label>
-                      <input
-                        type="time"
-                        step="1800"
+                      <TimeSelect
                         value={daySlotForm.end_time}
-                        onChange={(e) =>
-                          setDaySlotForm({ ...daySlotForm, end_time: e.target.value })
-                        }
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                        onChange={(v) => setDaySlotForm({ ...daySlotForm, end_time: v })}
                       />
                     </div>
                   </div>
@@ -410,22 +434,16 @@ export default function AdminSlots() {
               </div>
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">開始時間</label>
-                <input
-                  type="time"
-                  step="1800"
+                <TimeSelect
                   value={ruleForm.start_time}
-                  onChange={(e) => setRuleForm({ ...ruleForm, start_time: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                  onChange={(v) => setRuleForm({ ...ruleForm, start_time: v })}
                 />
               </div>
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">結束時間</label>
-                <input
-                  type="time"
-                  step="1800"
+                <TimeSelect
                   value={ruleForm.end_time}
-                  onChange={(e) => setRuleForm({ ...ruleForm, end_time: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                  onChange={(v) => setRuleForm({ ...ruleForm, end_time: v })}
                 />
               </div>
             </div>
@@ -485,20 +503,14 @@ export default function AdminSlots() {
                       </td>
                       <td className="px-3 py-2">
                         <div className="flex items-center gap-2">
-                          <input
-                            type="time"
-                            step="1800"
+                          <TimeSelect
                             value={editRuleForm.start_time}
-                            onChange={(e) => setEditRuleForm({ ...editRuleForm, start_time: e.target.value })}
-                            className="border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                            onChange={(v) => setEditRuleForm({ ...editRuleForm, start_time: v })}
                           />
                           <span className="text-gray-400">–</span>
-                          <input
-                            type="time"
-                            step="1800"
+                          <TimeSelect
                             value={editRuleForm.end_time}
-                            onChange={(e) => setEditRuleForm({ ...editRuleForm, end_time: e.target.value })}
-                            className="border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                            onChange={(v) => setEditRuleForm({ ...editRuleForm, end_time: v })}
                           />
                         </div>
                       </td>
