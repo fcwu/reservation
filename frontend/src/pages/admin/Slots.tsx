@@ -140,6 +140,16 @@ export default function AdminSlots() {
     load()
   }
 
+  const handleDeleteRule = async (id: string) => {
+    if (!confirm('確定刪除此規則？')) return
+    try {
+      await api.deleteSlotRule(id)
+      load()
+    } catch (err) {
+      alert((err as Error).message)
+    }
+  }
+
   const handleCreateSlot = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -431,6 +441,7 @@ export default function AdminSlots() {
                   <th className="text-left px-4 py-3 text-gray-600 font-medium">星期</th>
                   <th className="text-left px-4 py-3 text-gray-600 font-medium">時間</th>
                   <th className="text-left px-4 py-3 text-gray-600 font-medium">狀態</th>
+                  <th className="px-4 py-3" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -448,6 +459,14 @@ export default function AdminSlots() {
                         }`}
                       >
                         {rule.is_active ? '啟用' : '停用'}
+                      </button>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={() => handleDeleteRule(rule.id)}
+                        className="text-red-500 hover:underline text-sm"
+                      >
+                        刪除
                       </button>
                     </td>
                   </tr>

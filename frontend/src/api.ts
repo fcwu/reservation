@@ -68,6 +68,8 @@ export const api = {
     request('/api/admin/slots/rules', { method: 'POST', body: JSON.stringify(data) }),
   updateSlotRule: (id: string, data: Partial<SlotRule>) =>
     request(`/api/admin/slots/rules/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteSlotRule: (id: string) =>
+    request(`/api/admin/slots/rules/${id}`, { method: 'DELETE' }),
   createSlotOverride: (date: string) =>
     request('/api/admin/slots/overrides', { method: 'POST', body: JSON.stringify({ date }) }),
 

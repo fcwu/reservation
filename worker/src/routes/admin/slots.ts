@@ -141,6 +141,14 @@ slots.put('/rules/:id', async (c) => {
   )
 })
 
+slots.delete('/rules/:id', async (c) => {
+  const id = c.req.param('id')
+  const existing = await c.env.DB.prepare('SELECT id FROM slot_rules WHERE id = ?').bind(id).first()
+  if (!existing) return c.json({ error: 'Not found' }, 404)
+  await c.env.DB.prepare('DELETE FROM slot_rules WHERE id = ?').bind(id).run()
+  return c.json({ success: true })
+})
+
 // ── Slot Overrides ────────────────────────────────────────────────────────────
 
 slots.post('/overrides', async (c) => {
