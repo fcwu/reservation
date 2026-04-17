@@ -104,6 +104,10 @@ export default function AdminSlots() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [daySlotForm, setDaySlotForm] = useState({ start_time: '10:00', end_time: '22:00' })
 
+  // Rule editing state
+  const [editingRuleId, setEditingRuleId] = useState<string | null>(null)
+  const [editRuleForm, setEditRuleForm] = useState({ day_of_week: 1, start_time: '10:00', end_time: '22:00' })
+
   const load = () => api.getAdminSlots().then(setData).catch(console.error)
   useEffect(() => { load() }, [])
 
@@ -147,6 +151,22 @@ export default function AdminSlots() {
       load()
     } catch (err) {
       alert((err as Error).message)
+    }
+  }
+
+  const startEditRule = (rule: SlotRule) => {
+    setEditingRuleId(rule.id)
+    setEditRuleForm({ day_of_week: rule.day_of_week, start_time: rule.start_time, end_time: rule.end_time })
+  }
+
+  const handleSaveRule = async (id: string) => {
+    setError('')
+    try {
+      await api.updateSlotRule(id, editRuleForm)
+      setEditingRuleId(null)
+      load()
+    } catch (err) {
+      setError((err as Error).message)
     }
   }
 
@@ -445,35 +465,98 @@ export default function AdminSlots() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {(data?.rules ?? []).map((rule) => (
-                  <tr key={rule.id}>
-                    <td className="px-4 py-3 text-gray-800">每週{DAYS[rule.day_of_week]}</td>
-                    <td className="px-4 py-3 text-gray-600">
-                      {rule.start_time} – {rule.end_time}
-                    </td>
-                    <td className="px-4 py-3">
-                      <button
-                        onClick={() => handleToggleRule(rule)}
-                        className={`text-xs px-2 py-1 rounded-full font-medium ${
-                          rule.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
-                        }`}
-                      >
-                        {rule.is_active ? '啟用' : '停用'}
-                      </button>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <button
-                        onClick={() => handleDeleteRule(rule.id)}
-                        className="text-red-500 hover:underline text-sm"
-                      >
-                        刪除
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {(data?.rules ?? []).map((rule) =>
+                  editingRuleId === rule.id ? (
+                    <tr key={rule.id} className="bg-indigo-50">
+                      <td className="px-3 py-2">
+                        <select
+                          value={editRuleForm.day_of_week}
+                          onChange={(e) => setEditRuleForm({ ...editRuleForm, day_of_week: Number(e.target.value) })}
+                          className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                        >
+                          {DAYS.map((d, i) => (
+                            <option key={i} value={i}>星期{d}</option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="time"
+                            value={editRuleForm.start_time}
+                            onChange={(e) => setEditRuleForm({ ...editRuleForm, start_time: e.target.value })}
+                            className="border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                          />
+                          <span className="text-gray-400">–</span>
+                          <input
+                            type="time"
+                            value={editRuleForm.end_time}
+                            onChange={(e) => setEditRuleForm({ ...editRuleForm, end_time: e.target.value })}
+                            className="border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                          />
+                        </div>
+                      </td>
+                      <td className="px-3 py-2">
+                        <button
+                          onClick={() => handleToggleRule(rule)}
+                          className={`text-xs px-2 py-1 rounded-full font-medium ${
+                            rule.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                          }`}
+                        >
+                          {rule.is_active ? '啟用' : '停用'}
+                        </button>
+                      </td>
+                      <td className="px-3 py-2 text-right whitespace-nowrap">
+                        <button
+                          onClick={() => handleSaveRule(rule.id)}
+                          className="text-indigo-600 hover:underline text-sm mr-3 font-medium"
+                        >
+                          儲存
+                        </button>
+                        <button
+                          onClick={() => setEditingRuleId(null)}
+                          className="text-gray-500 hover:underline text-sm"
+                        >
+                          取消
+                        </button>
+                      </td>
+                    </tr>
+                  ) : (
+                    <tr key={rule.id}>
+                      <td className="px-4 py-3 text-gray-800">每週{DAYS[rule.day_of_week]}</td>
+                      <td className="px-4 py-3 text-gray-600">
+                        {rule.start_time} – {rule.end_time}
+                      </td>
+                      <td className="px-4 py-3">
+                        <button
+                          onClick={() => handleToggleRule(rule)}
+                          className={`text-xs px-2 py-1 rounded-full font-medium ${
+                            rule.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                          }`}
+                        >
+                          {rule.is_active ? '啟用' : '停用'}
+                        </button>
+                      </td>
+                      <td className="px-4 py-3 text-right whitespace-nowrap">
+                        <button
+                          onClick={() => startEditRule(rule)}
+                          className="text-indigo-600 hover:underline text-sm mr-3"
+                        >
+                          編輯
+                        </button>
+                        <button
+                          onClick={() => handleDeleteRule(rule.id)}
+                          className="text-red-500 hover:underline text-sm"
+                        >
+                          刪除
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                )}
                 {!data?.rules?.length && (
                   <tr>
-                    <td colSpan={3} className="px-4 py-8 text-center text-gray-400">
+                    <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
                       尚無規則
                     </td>
                   </tr>
