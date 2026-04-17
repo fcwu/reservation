@@ -43,7 +43,20 @@ publicSlots.get('/', async (c) => {
     ...expanded.map((s) => ({ ...s, is_available: 1, type: 'recurring' as const })),
   ].sort((a, b) => a.start_at.localeCompare(b.start_at))
 
-  return c.json({ slots: allSlots, services: services.results })
+  // Find dates that are fully booked (have slots in DB but none available)
+  const unavailableSlots = await c.env.DB.prepare(`
+    SELECT DISTINCT date(start_at) as date
+    FROM slots
+    WHERE start_at >= datetime('now', 'start of day')
+      AND is_available = 0
+  `).all<{ date: string }>()
+
+  const availableDates = new Set(allSlots.map((s) => s.start_at.slice(0, 10)))
+  const bookedDates = unavailableSlots.results
+    .map((r) => r.date)
+    .filter((d) => !availableDates.has(d))
+
+  return c.json({ slots: allSlots, services: services.results, bookedDates })
 })
 
 export default publicSlots

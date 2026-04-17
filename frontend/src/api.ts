@@ -27,6 +27,7 @@ export const api = {
     request<{
       slots: Slot[]
       services: Service[]
+      bookedDates: string[]
     }>('/api/slots'),
 
   submitReservation: (data: ReservationSubmit) =>
