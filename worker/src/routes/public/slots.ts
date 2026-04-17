@@ -56,7 +56,9 @@ publicSlots.get('/', async (c) => {
     .map((r) => r.date)
     .filter((d) => !availableDates.has(d))
 
-  return c.json({ slots: allSlots, services: services.results, bookedDates })
+  const closedDates = overrides.results.map((o) => o.date)
+
+  return c.json({ slots: allSlots, services: services.results, bookedDates, closedDates })
 })
 
 export default publicSlots

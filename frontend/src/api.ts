@@ -28,6 +28,7 @@ export const api = {
       slots: Slot[]
       services: Service[]
       bookedDates: string[]
+      closedDates: string[]
     }>('/api/slots'),
 
   submitReservation: (data: ReservationSubmit) =>
