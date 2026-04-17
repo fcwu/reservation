@@ -26,7 +26,7 @@ export default function AdminSlots() {
   }
 
   const handleToggleRule = async (rule: SlotRule) => {
-    await api.updateSlotRule(rule.id, { is_active: !rule.is_active })
+    await api.updateSlotRule(rule.id, { is_active: rule.is_active ? 0 : 1 })
     load()
   }
 
