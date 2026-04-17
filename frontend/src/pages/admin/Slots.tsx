@@ -95,14 +95,14 @@ function AdminCalendar({
 export default function AdminSlots() {
   const [data, setData] = useState<AdminSlotsResponse | null>(null)
   const [tab, setTab] = useState<'calendar' | 'rules' | 'manual'>('calendar')
-  const [ruleForm, setRuleForm] = useState({ day_of_week: 1, start_time: '09:00', end_time: '17:00' })
+  const [ruleForm, setRuleForm] = useState({ day_of_week: 1, start_time: '10:00', end_time: '22:00' })
   const [slotForm, setSlotForm] = useState({ start_at: '', end_at: '' })
   const [overrideDate, setOverrideDate] = useState('')
   const [error, setError] = useState('')
 
   // Calendar tab state
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
-  const [daySlotForm, setDaySlotForm] = useState({ start_time: '09:00', end_time: '10:00' })
+  const [daySlotForm, setDaySlotForm] = useState({ start_time: '10:00', end_time: '22:00' })
 
   const load = () => api.getAdminSlots().then(setData).catch(console.error)
   useEffect(() => { load() }, [])
