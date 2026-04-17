@@ -145,12 +145,14 @@ export default function AdminServices() {
                     <span className="inline-flex gap-2 items-center">
                       <span className="text-sm text-gray-600">確定刪除？</span>
                       <button
+                        type="button"
                         onClick={() => handleDelete(s.id)}
                         className="text-red-600 font-medium hover:underline text-sm"
                       >
                         確認
                       </button>
                       <button
+                        type="button"
                         onClick={() => setConfirmDeleteId(null)}
                         className="text-gray-500 hover:underline text-sm"
                       >
